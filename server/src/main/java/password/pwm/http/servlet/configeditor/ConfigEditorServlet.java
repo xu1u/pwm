@@ -294,7 +294,7 @@ public class ConfigEditorServlet extends ControlledPwmServlet
         else if ( theSetting == null )
         {
             final String errorStr = "readSettingAsString request for unknown key: " + key;
-            LOGGER.warn( errorStr );
+            LOGGER.warn( () -> errorStr );
             pwmRequest.outputJsonResult( RestResultBean.fromError( new ErrorInformation( PwmError.ERROR_INTERNAL, errorStr ) ) );
             return ProcessStatus.Halt;
         }
@@ -406,7 +406,7 @@ public class ConfigEditorServlet extends ControlledPwmServlet
             catch ( final Exception e )
             {
                 final String errorMsg = "error writing default value for setting " + setting.toString() + ", error: " + e.getMessage();
-                LOGGER.error( errorMsg, e );
+                LOGGER.error( () -> errorMsg, e );
                 throw new IllegalStateException( errorMsg, e );
             }
             returnMap.put( "key", key );
@@ -554,7 +554,7 @@ public class ConfigEditorServlet extends ControlledPwmServlet
                 }
                 catch ( final Exception e )
                 {
-                    LOGGER.error( "error updating notesText: " + e.getMessage() );
+                    LOGGER.error( () -> "error updating notesText: " + e.getMessage() );
                 }
             }
             {
@@ -570,7 +570,7 @@ public class ConfigEditorServlet extends ControlledPwmServlet
                     catch ( final IllegalArgumentException e )
                     {
                         modifer.writeConfigProperty( ConfigurationProperty.LDAP_TEMPLATE, PwmSettingTemplate.DEFAULT.toString() );
-                        LOGGER.error( "unknown template set request: " + requestedTemplate );
+                        LOGGER.error( () -> "unknown template set request: " + requestedTemplate );
                     }
                 }
             }
@@ -752,7 +752,6 @@ public class ConfigEditorServlet extends ControlledPwmServlet
         final ConfigManagerBean configManagerBean = getBean( pwmRequest );
         final StoredConfigurationModifier modifier = StoredConfigurationModifier.newModifier( configManagerBean.getStoredConfiguration() );
 
-
         final String key = pwmRequest.readParameterAsString( "key" );
         final PwmSetting setting = PwmSetting.forKey( key );
         final int maxFileSize = Integer.parseInt( pwmRequest.getConfig().readAppProperty( AppProperty.CONFIG_MAX_JDBC_JAR_SIZE ) );
@@ -788,12 +787,13 @@ public class ConfigEditorServlet extends ControlledPwmServlet
                         alias
                 );
 
+                configManagerBean.setStoredConfiguration( modifier.newStoredConfiguration() );
                 pwmRequest.outputJsonResult( RestResultBean.forSuccessMessage( pwmRequest, Message.Success_Unknown ) );
                 return ProcessStatus.Halt;
             }
             catch ( final PwmException e )
             {
-                LOGGER.error( pwmRequest, "error during https certificate upload: " + e.getMessage() );
+                LOGGER.error( pwmRequest, () -> "error during https certificate upload: " + e.getMessage() );
                 pwmRequest.respondWithError( e.getErrorInformation(), false );
                 return ProcessStatus.Halt;
             }

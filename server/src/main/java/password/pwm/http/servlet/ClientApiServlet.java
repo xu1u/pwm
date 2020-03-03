@@ -322,7 +322,7 @@ public class ClientApiServlet extends ControlledPwmServlet
             long idleSeconds = config.readSettingAsLong( PwmSetting.IDLE_TIMEOUT_SECONDS );
             if ( pageUrl == null || pageUrl.isEmpty() )
             {
-                LOGGER.warn( pwmRequest, "request to /client data did not include pageUrl" );
+                LOGGER.warn( pwmRequest, () -> "request to /client data did not include pageUrl" );
             }
             else
             {
@@ -334,7 +334,7 @@ public class ClientApiServlet extends ControlledPwmServlet
                 }
                 catch ( final Exception e )
                 {
-                    LOGGER.error( pwmRequest, "error determining idle timeout time for request: " + e.getMessage() );
+                    LOGGER.error( pwmRequest, () -> "error determining idle timeout time for request: " + e.getMessage() );
                 }
             }
             settingMap.put( "MaxInactiveInterval", idleSeconds );
@@ -441,7 +441,7 @@ public class ClientApiServlet extends ControlledPwmServlet
         }
         catch ( final Exception e )
         {
-            LOGGER.error( pwmRequest, "error expanding macro display value: " + e.getMessage() );
+            LOGGER.error( pwmRequest, () -> "error expanding macro display value: " + e.getMessage() );
         }
         return displayStrings;
     }
@@ -479,10 +479,12 @@ public class ClientApiServlet extends ControlledPwmServlet
     private void precheckPublicHealthAndStats( final PwmRequest pwmRequest )
             throws PwmUnrecoverableException
     {
-        if (
-                pwmRequest.getPwmApplication().getApplicationMode() != PwmApplicationMode.RUNNING
-                        && pwmRequest.getPwmApplication().getApplicationMode() != PwmApplicationMode.CONFIGURATION
-        )
+        if ( pwmRequest.getPwmApplication().getApplicationMode() == PwmApplicationMode.CONFIGURATION )
+        {
+            return;
+        }
+
+        if ( pwmRequest.getPwmApplication().getApplicationMode() != PwmApplicationMode.RUNNING )
         {
             final ErrorInformation errorInformation = new ErrorInformation( PwmError.ERROR_SERVICE_NOT_AVAILABLE );
             throw new PwmUnrecoverableException( errorInformation );

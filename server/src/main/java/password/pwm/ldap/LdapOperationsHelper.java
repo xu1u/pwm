@@ -64,7 +64,7 @@ import password.pwm.util.java.StringUtil;
 import password.pwm.util.java.TimeDuration;
 import password.pwm.util.logging.PwmLogger;
 import password.pwm.util.macro.MacroMachine;
-import password.pwm.util.secure.X509Utils;
+import password.pwm.util.secure.PwmTrustManager;
 
 import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
@@ -201,7 +201,7 @@ public class LdapOperationsHelper
                 errorMsg.append( e.getMessage() );
             }
             final ErrorInformation errorInformation = new ErrorInformation( PwmError.ERROR_DIRECTORY_UNAVAILABLE, errorMsg.toString() );
-            LOGGER.fatal( sessionLabel, "check ldap proxy settings: " + errorInformation.toDebugStr() );
+            LOGGER.fatal( sessionLabel, () -> "check ldap proxy settings: " + errorInformation.toDebugStr() );
             throw new PwmUnrecoverableException( errorInformation );
         }
     }
@@ -499,7 +499,7 @@ public class LdapOperationsHelper
             {
                 throw new PwmUnrecoverableException( errorInformation );
             }
-            LOGGER.warn( errorMsg );
+            LOGGER.warn( () -> errorMsg );
             return null;
         }
 
@@ -531,7 +531,7 @@ public class LdapOperationsHelper
                     {
                         if ( e.getError() != PwmError.ERROR_CANT_MATCH_USER )
                         {
-                            LOGGER.warn( sessionLabel, "error while searching to verify new unique GUID value: " + e.getError() );
+                            LOGGER.warn( sessionLabel, () -> "error while searching to verify new unique GUID value: " + e.getError() );
                         }
                     }
                 }
@@ -583,7 +583,7 @@ public class LdapOperationsHelper
                 final String errorMsg = "unable to write GUID value to user attribute " + guidAttributeName + " : " + e.getMessage()
                         + ", cannot write GUID value to user " + userIdentity;
                 final ErrorInformation errorInformation = new ErrorInformation( PwmError.ERROR_INTERNAL, errorMsg );
-                LOGGER.error( errorInformation.toDebugStr() );
+                LOGGER.error( () -> errorInformation.toDebugStr() );
                 throw new PwmUnrecoverableException( errorInformation );
             }
             catch ( final ChaiUnavailableException e )
@@ -729,13 +729,13 @@ public class LdapOperationsHelper
         }
         catch ( final Exception e )
         {
-            LOGGER.warn( "unknown CR storage format type '" + storageMethodString + "' " );
+            LOGGER.warn( () -> "unknown CR storage format type '" + storageMethodString + "' " );
         }
 
         final List<X509Certificate> ldapServerCerts = ldapProfile.readSettingAsCertificate( PwmSetting.LDAP_SERVER_CERTS );
         if ( ldapServerCerts != null && ldapServerCerts.size() > 0 )
         {
-            final X509TrustManager tm = new X509Utils.CertMatchingTrustManager( config, ldapServerCerts );
+            final X509TrustManager tm = PwmTrustManager.createPwmTrustManager( config, ldapServerCerts );
             configBuilder.setTrustManager( new X509TrustManager[]
                     {
                             tm,
@@ -778,7 +778,7 @@ public class LdapOperationsHelper
                 final ChaiSetting theSetting = ChaiSetting.forKey( key );
                 if ( theSetting == null )
                 {
-                    LOGGER.warn( "ignoring unknown chai setting '" + key + "'" );
+                    LOGGER.warn( () -> "ignoring unknown chai setting '" + key + "'" );
                 }
                 else
                 {
@@ -917,7 +917,7 @@ public class LdapOperationsHelper
         }
         catch ( final Exception e )
         {
-            LOGGER.warn( "error reading password expiration time: " + e.getMessage() );
+            LOGGER.warn( () -> "error reading password expiration time: " + e.getMessage() );
         }
 
         return null;
@@ -1070,7 +1070,7 @@ public class LdapOperationsHelper
             }
             catch ( final ChaiException e )
             {
-                LOGGER.error( sessionLabel, "error writing language value to language attribute '" + languageAttr + "', error: " + e.getMessage() );
+                LOGGER.error( sessionLabel, () -> "error writing language value to language attribute '" + languageAttr + "', error: " + e.getMessage() );
             }
         }
     }

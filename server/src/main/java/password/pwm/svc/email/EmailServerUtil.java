@@ -38,6 +38,8 @@ import password.pwm.util.java.JavaHelper;
 import password.pwm.util.java.StringUtil;
 import password.pwm.util.logging.PwmLogger;
 import password.pwm.util.macro.MacroMachine;
+import password.pwm.util.secure.PwmTrustManager;
+import password.pwm.util.secure.CertificateReadingTrustManager;
 import password.pwm.util.secure.X509Utils;
 
 import javax.mail.Message;
@@ -118,7 +120,7 @@ public class EmailServerUtil
         }
         else
         {
-            LOGGER.warn( "discarding incompletely configured email address for smtp server profile " + id );
+            LOGGER.warn( () -> "discarding incompletely configured email address for smtp server profile " + id );
         }
 
         return Optional.empty();
@@ -132,7 +134,7 @@ public class EmailServerUtil
         {
             return X509Utils.getDefaultJavaTrustManager( configuration );
         }
-        final TrustManager certMatchingTrustManager = new X509Utils.CertMatchingTrustManager( configuration, configuredCerts );
+        final TrustManager certMatchingTrustManager = PwmTrustManager.createPwmTrustManager( configuration, configuredCerts );
         return new TrustManager[]
                 {
                         certMatchingTrustManager,
@@ -224,7 +226,7 @@ public class EmailServerUtil
             }
             catch ( final UnsupportedEncodingException e )
             {
-                LOGGER.error( "unsupported encoding error while parsing internet address '" + input + "', error: " + e.getMessage() );
+                LOGGER.error( () -> "unsupported encoding error while parsing internet address '" + input + "', error: " + e.getMessage() );
             }
             return address;
         }
@@ -386,8 +388,8 @@ public class EmailServerUtil
             throws PwmUnrecoverableException
     {
         final EmailServerProfile emailServerProfile = configuration.getEmailServerProfiles().get( profile );
-        final X509Utils.CertReaderTrustManager certReaderTm = new X509Utils.CertReaderTrustManager(
-                new X509Utils.PromiscuousTrustManager(),
+        final CertificateReadingTrustManager certReaderTm = CertificateReadingTrustManager.newCertReaderTrustManager(
+                configuration,
                 X509Utils.ReadCertificateFlag.ReadOnlyRootCA );
         final TrustManager[] trustManagers =  new TrustManager[]
                 {
